@@ -174,7 +174,7 @@ export default function Home() {
             <h1>{config.eventName}</h1>
             <h2 className="gift-title">갖고 싶은 선물은... 바로..</h2>
             <div className="gift-image-container">
-              <img src={config.imagePath} alt="생일 선물" className="gift-image" />
+              <img src="/assets/gift.jpg" alt="생일 선물" className="gift-image" />
             </div>
             <h2>{config.giftName}</h2>
             <div className="funding-status">
