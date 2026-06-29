@@ -24,7 +24,7 @@ export default function Home() {
   const [nickname, setNickname] = useState('');
   const [amount, setAmount] = useState<number | ''>('');
   const [hideAmount, setHideAmount] = useState(false);
-  const [step, setStep] = useState<'intro' | 'action' | 'deposit' | 'success'>('intro');
+  const [step, setStep] = useState<'intro' | 'action' | 'deposit' | 'success' | 'finished'>('intro');
   const [myNickname, setMyNickname] = useState<string | null>(null);
   const [noCount, setNoCount] = useState(0);
   const [noPosition, setNoPosition] = useState({ x: 0, y: 0 });
@@ -34,6 +34,9 @@ export default function Home() {
       .then(res => res.json())
       .then(data => {
         setConfig(data);
+        if (data.currentAmount >= data.targetAmount) {
+          setStep('finished');
+        }
       });
 
     // Check URL params for nickname
@@ -98,7 +101,11 @@ export default function Home() {
 
     // Update state optimistically
     setConfig(newData);
-    setStep('success');
+    if (newData.currentAmount >= newData.targetAmount) {
+      setStep('finished');
+    } else {
+      setStep('success');
+    }
 
     // Save to server
     await fetch('/api/config', {
@@ -178,9 +185,22 @@ export default function Home() {
               <div className="progress-bar-container">
                 <div className="progress-bar" id="progressBar" style={{ width: `${progressPercentage}%` }}></div>
               </div>
-              <p className="remaining-amount">목표까지 <span id="remainingAmountText">{formatNumber(remaining)}</span>원 남았어요!</p>
+              <p className="remaining-amount">
+                목표까지 <span id="remainingAmountText">{formatNumber(remaining)}</span>원 ({Math.max(100 - progressPercentage, 0).toFixed(1).replace('.0', '')}%) 남았어요!
+              </p>
             </div>
           </header>
+
+          {/* Finished State */}
+          {step === 'finished' && (
+            <section className="success-animation" id="finishedSection">
+              <h2 className="success-title">감사합니다 펀딩 완료! 💕</h2>
+              <img src="/assets/thanks.jpg" alt="Thanks" className="dancing-cat" />
+              <p style={{ fontWeight: 800, color: '#ff6b95', margin: '15px 0', fontSize: '1.2rem' }}>
+                여러분의 사랑으로 목표 금액이 모두 모였습니다!
+              </p>
+            </section>
+          )}
 
           {/* Funding Action */}
           {step === 'action' && (
@@ -257,7 +277,7 @@ export default function Home() {
 
                   return (
                     <li key={index} className="history-item">
-                      <div className="history-nickname">🎉 {item.nickname} {isMine && <span style={{ fontSize: '0.8rem', color: '#ff4d4f' }}></span>}</div>
+                      <div className="history-nickname">🎉 {item.nickname} {isMine && <span style={{ fontSize: '0.8rem', color: '#ff4d4f' }}>(내 후원)</span>}</div>
                       <div className="history-amount">{showAmount ? `${formatNumber(item.amount)}원` : '비밀 금액 🤫'}</div>
                     </li>
                   );
