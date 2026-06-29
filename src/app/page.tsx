@@ -165,10 +165,10 @@ export default function Home() {
           {/* Hero Section */}
           <header className="hero">
             <h1>{config.eventName}</h1>
+            <h2 className="gift-title">갖고 싶은 선물은... 바로..</h2>
             <div className="gift-image-container">
               <img src={config.imagePath} alt="생일 선물" className="gift-image" />
             </div>
-            <h2 className="gift-title">갖고 싶은 선물은... 바로..</h2>
             <h2>{config.giftName}</h2>
             <div className="funding-status">
               <div className="progress-info">
@@ -192,6 +192,7 @@ export default function Home() {
                   type="text"
                   id="funderNickname"
                   placeholder="닉네임을 입력해주세요 (선택)"
+                  onChange={(e) => setNickname(e.target.value)}
                 />
               </div>
               <div className="input-group">
@@ -213,7 +214,7 @@ export default function Home() {
                   checked={hideAmount}
                   onChange={e => setHideAmount(e.target.checked)}
                 />
-                <label htmlFor="hideAmount">금액 비공개로 하기 🤫</label>
+                <label htmlFor="hideAmount">금액 비공개로 하기 🤫(생일 당사자는 확인 가능합니다)</label>
               </div>
               <button className="btn primary-btn" id="fundBtn" onClick={handleFundClick}>펀딩하기</button>
             </section>

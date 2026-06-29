@@ -12,11 +12,10 @@ export default function AdminPage() {
     bankName: '',
     accountNumber: '',
     accountHolder: '',
-    imagePath: '/assets/gift.png'
+    imagePath: '/assets/gift.jpg'
   });
   const [loading, setLoading] = useState(true);
 
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [fundingHistory, setFundingHistory] = useState<any[]>([]);
 
   useEffect(() => {
@@ -30,7 +29,7 @@ export default function AdminPage() {
           bankName: data.bankName || '',
           accountNumber: data.accountNumber || '',
           accountHolder: data.accountHolder || '',
-          imagePath: data.imagePath || '/assets/gift.png'
+          imagePath: data.imagePath || '/assets/gift.jpg'
         });
         setFundingHistory(data.fundingHistory || []);
         setLoading(false);
@@ -45,42 +44,12 @@ export default function AdminPage() {
     }));
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingImage(true);
-    const data = new FormData();
-    data.append('file', file);
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: data,
-      });
-      const result = await res.json();
-      if (result.path) {
-        setFormData(prev => ({ ...prev, imagePath: result.path }));
-      } else {
-        alert('이미지 업로드에 실패했습니다.');
-      }
-    } catch (err) {
-      alert('오류가 발생했습니다.');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (uploadingImage) {
-      alert('이미지 업로드 중입니다. 잠시만 기다려주세요.');
-      return;
-    }
-    
+
     const confirmed = window.confirm('설정을 저장하면 새로운 이벤트를 위해 기존 펀딩 내역과 모금액이 모두 [초기화]됩니다.\n계속하시겠습니까?');
     if (!confirmed) return;
-    
+
     await fetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -124,17 +93,8 @@ export default function AdminPage() {
           <label>예금주</label>
           <input name="accountHolder" value={formData.accountHolder} onChange={handleChange} required />
         </div>
-        
-        <div className="input-group">
-          <label>선물 사진 업로드</label>
-          <input type="file" accept="image/*" onChange={handleImageUpload} />
-          {uploadingImage && <p style={{ fontSize: '0.9rem', color: '#666' }}>업로드 중...</p>}
-          {formData.imagePath && !uploadingImage && (
-            <div style={{ marginTop: '0.5rem' }}>
-              <img src={formData.imagePath} alt="Preview" style={{ width: '100px', borderRadius: '8px' }} />
-            </div>
-          )}
-        </div>
+
+
 
         <button type="submit" className="btn primary-btn" style={{ marginTop: '1rem' }}>
           저장하기
@@ -154,7 +114,7 @@ export default function AdminPage() {
           ) : (
             [...fundingHistory].reverse().map((item: any, index: number) => (
               <li key={index} className="history-item" style={{ background: 'rgba(255, 255, 255, 0.9)' }}>
-                <div className="history-nickname">🎉 {item.nickname} {item.hidden && <span style={{fontSize: '0.8rem', color: '#ff6b95'}}>(비공개)</span>}</div>
+                <div className="history-nickname">🎉 {item.nickname} {item.hidden && <span style={{ fontSize: '0.8rem', color: '#ff6b95' }}>(비공개)</span>}</div>
                 <div className="history-amount" style={{ color: '#111' }}>
                   {item.amount.toLocaleString()}원
                 </div>

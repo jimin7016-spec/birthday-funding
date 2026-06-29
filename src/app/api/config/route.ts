@@ -10,7 +10,7 @@ const defaultConfig = {
   bankName: "은행명",
   accountNumber: "계좌번호",
   accountHolder: "예금주: 이름",
-  imagePath: "/assets/gift.png",
+  imagePath: "/assets/gift.jpg",
   currentAmount: 0,
   fundingHistory: []
 };
