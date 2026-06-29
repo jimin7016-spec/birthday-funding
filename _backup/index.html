@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>지민이의 생일 펀딩!</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <header class="hero">
+            <h1>🎉 지민이의 생일 펀딩 🎉</h1>
+            <div class="gift-image-container">
+                <img src="assets/gift.png" alt="생일 선물" class="gift-image">
+            </div>
+            <h2 class="gift-title">갖고 싶은 선물: 휴대용 모니터</h2>
+            <div class="funding-status">
+                <div class="progress-info">
+                    <span class="current-amount" id="currentAmountText">0원</span>
+                    <span class="target-amount">/ 339,000원</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <p class="remaining-amount">목표까지 <span id="remainingAmountText">339,000</span>원 남았어요!</p>
+            </div>
+        </header>
+
+        <!-- Funding Action -->
+        <section class="funding-action" id="fundingActionSection">
+            <h3>🎁 펀딩 참여하기</h3>
+            <div class="input-group">
+                <label for="funderNickname">닉네임</label>
+                <input type="text" id="funderNickname" placeholder="닉네임을 입력해주세요 (선택)">
+            </div>
+            <div class="input-group">
+                <label for="fundingAmount">펀딩 금액 (원)</label>
+                <input type="number" id="fundingAmount" placeholder="금액을 입력해주세요" min="1000" step="1000">
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="hideAmount">
+                <label for="hideAmount">금액 비공개로 하기 🤫(생일 당사자는 확인 가능합니다)</label>
+            </div>
+            <button class="btn primary-btn" id="fundBtn">펀딩하기</button>
+        </section>
+
+        <!-- Deposit Info (Hidden by default) -->
+        <section class="deposit-info hidden" id="depositInfoSection">
+            <h3>입금 안내</h3>
+            <p>아래 계좌로 <span id="depositAmountText" class="highlight">0</span>원을 입금해주세요!</p>
+            <div class="account-box">
+                <p class="bank-name">농협</p>
+                <p class="account-number">3560005574703</p>
+                <p class="account-holder">예금주: 변지민</p>
+            </div>
+            <button class="btn secondary-btn" id="depositCompleteBtn">입금 완료했어요!</button>
+        </section>
+
+        <!-- Success Animation (Hidden by default) -->
+        <section class="success-animation hidden" id="successSection">
+            <h2 class="success-title">감사합니다! 💕</h2>
+            <img src="assets/dancing.jpg" alt="Dancing Cat" class="dancing-cat">
+            <p>펀딩 내역이 추가되었습니다!</p>
+            <button class="btn primary-btn" id="returnBtn">돌아가기</button>
+        </section>
+
+        <!-- Funding History -->
+        <section class="funding-history">
+            <h3>💖 펀딩 내역 💖</h3>
+            <ul id="historyList" class="history-list">
+                <!-- History items will be added here -->
+            </ul>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
