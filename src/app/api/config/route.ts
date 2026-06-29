@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
 
 const KV_CONFIG_KEY = 'birthday_config';
 
@@ -15,22 +15,24 @@ const defaultConfig = {
   fundingHistory: []
 };
 
+// Create a redis client if REDIS_URL is present
+const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
+
 export async function GET() {
   try {
-    // If KV environment variables are not set, return default config immediately
-    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-      console.warn("Vercel KV is not configured. Falling back to default config.");
+    if (!redis) {
+      console.warn("Redis is not configured. Falling back to default config.");
       return NextResponse.json(defaultConfig);
     }
 
-    const data = await kv.get(KV_CONFIG_KEY);
-    if (!data) {
+    const dataString = await redis.get(KV_CONFIG_KEY);
+    if (!dataString) {
       return NextResponse.json(defaultConfig);
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(JSON.parse(dataString));
   } catch (error) {
-    console.error("Failed to read from KV:", error);
+    console.error("Failed to read from Redis:", error);
     return NextResponse.json(defaultConfig);
   }
 }
@@ -39,15 +41,15 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-      console.warn("Vercel KV is not configured. Cannot save config.");
-      return NextResponse.json({ success: false, error: 'KV is not configured. Go to Vercel dashboard to enable KV Storage.' }, { status: 500 });
+    if (!redis) {
+      console.warn("Redis is not configured. Cannot save config.");
+      return NextResponse.json({ success: false, error: 'Database is not configured. (Missing REDIS_URL)' }, { status: 500 });
     }
 
     let existingData: any = {};
     try {
-      const data = await kv.get(KV_CONFIG_KEY);
-      if (data) existingData = data;
+      const dataString = await redis.get(KV_CONFIG_KEY);
+      if (dataString) existingData = JSON.parse(dataString);
       else {
         existingData = {
           currentAmount: 0,
@@ -66,10 +68,10 @@ export async function POST(request: Request) {
       ...body
     };
 
-    await kv.set(KV_CONFIG_KEY, newData);
+    await redis.set(KV_CONFIG_KEY, JSON.stringify(newData));
     return NextResponse.json({ success: true, data: newData });
   } catch (error) {
-    console.error("Failed to write to KV:", error);
+    console.error("Failed to write to Redis:", error);
     return NextResponse.json({ success: false, error: 'Failed to save config' }, { status: 500 });
   }
 }

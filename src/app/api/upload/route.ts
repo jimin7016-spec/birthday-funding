@@ -10,11 +10,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No file received." }, { status: 400 });
     }
 
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      console.warn("Vercel Blob is not configured. Falling back to local fake upload.");
-      return NextResponse.json({ error: "Blob is not configured. Go to Vercel dashboard to enable Blob Storage." }, { status: 500 });
-    }
-
     // Upload to Vercel Blob
     const blob = await put(file.name, file, {
       access: 'public',
