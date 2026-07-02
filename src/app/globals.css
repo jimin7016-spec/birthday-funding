@@ -480,3 +480,125 @@ section {
     padding: 30px;
     margin-top: 40px;
 }
+
+/* Cute Warning Modal Styles */
+.warning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 240, 245, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeInOverlay 0.3s ease forwards;
+}
+
+.warning-card {
+    background: #ffffff;
+    width: 90%;
+    max-width: 400px;
+    border-radius: var(--border-radius-lg);
+    padding: 35px 30px;
+    box-shadow: 0 20px 50px rgba(255, 106, 136, 0.25);
+    border: 3px solid #ffccd8;
+    text-align: center;
+    transform: scale(0.7);
+    opacity: 0;
+    animation: popInCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.warning-image-wrapper {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 20px;
+    background: #fff0f5;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border: 2px dashed #ff9cbd;
+}
+
+.warning-cat-img {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    animation: scaleWobble 2s infinite ease-in-out;
+}
+
+.warning-card-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #ff4d79;
+    margin-bottom: 8px;
+}
+
+.warning-card-subtitle {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ff7899;
+    margin-bottom: 15px;
+}
+
+.warning-card-desc {
+    font-size: 0.95rem;
+    color: #666666;
+    line-height: 1.5;
+    margin-bottom: 25px;
+    font-weight: 500;
+}
+
+.warning-close-btn {
+    padding: 14px;
+    font-size: 1.1rem;
+    border-radius: var(--border-radius-sm);
+    background: var(--primary-gradient);
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.2s ease;
+}
+
+.warning-close-btn:hover {
+    transform: scale(1.03);
+    box-shadow: var(--shadow-hover);
+}
+
+@keyframes fadeInOverlay {
+    from { background: rgba(255, 240, 245, 0); backdrop-filter: blur(0px); }
+    to { background: rgba(255, 240, 245, 0.75); backdrop-filter: blur(8px); }
+}
+
+@keyframes popInCard {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes scaleWobble {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.08) rotate(3deg); }
+}
+
+.delete-history-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 4px 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-history-btn:hover {
+    background: #fff0f2;
+    transform: scale(1.15);
+}

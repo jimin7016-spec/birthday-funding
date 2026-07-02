@@ -28,6 +28,8 @@ export default function Home() {
   const [myNickname, setMyNickname] = useState<string | null>(null);
   const [noCount, setNoCount] = useState(0);
   const [noPosition, setNoPosition] = useState({ x: 0, y: 0 });
+  const [showWarning, setShowWarning] = useState(false);
+  const [myFundIds, setMyFundIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetch('/api/config')
@@ -49,6 +51,16 @@ export default function Home() {
     if (storedNickname) {
       setMyNickname(storedNickname);
       if (!presetNickname) setNickname(storedNickname);
+    }
+
+    // Retrieve myFundIds from localStorage
+    const storedFundIds = localStorage.getItem('birthday_myFundIds');
+    if (storedFundIds) {
+      try {
+        setMyFundIds(JSON.parse(storedFundIds));
+      } catch (e) {
+        console.error(e);
+      }
     }
   }, []);
 
@@ -80,14 +92,20 @@ export default function Home() {
       alert('올바른 펀딩 금액을 입력해주세요!');
       return;
     }
+    if (numAmount > 30000) {
+      setShowWarning(true);
+      return;
+    }
     setStep('deposit');
   };
 
   const handleDepositComplete = async () => {
     const finalNickname = nickname.trim() ? nickname.trim() : '익명의 천사';
     const numAmount = Number(amount);
+    const newId = 'fund_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
     const newHistoryItem = {
+      id: newId,
       nickname: finalNickname,
       amount: numAmount,
       hidden: hideAmount
@@ -101,6 +119,12 @@ export default function Home() {
 
     // Update state optimistically
     setConfig(newData);
+
+    // Update local storage and state for myFundIds
+    const updatedFundIds = [...myFundIds, newId];
+    setMyFundIds(updatedFundIds);
+    localStorage.setItem('birthday_myFundIds', JSON.stringify(updatedFundIds));
+
     if (newData.currentAmount >= newData.targetAmount) {
       setStep('finished');
     } else {
@@ -117,6 +141,54 @@ export default function Home() {
     // Remember my nickname
     localStorage.setItem('birthday_myNickname', finalNickname);
     setMyNickname(finalNickname);
+  };
+
+  const handleDeleteFunding = async (idToDelete: string) => {
+    if (!config) return;
+
+    // Find the item to delete
+    const targetItem = config.fundingHistory.find(item => item.id === idToDelete);
+    if (!targetItem) {
+      alert('삭제할 내역을 찾을 수 없습니다.');
+      return;
+    }
+
+    const confirmDelete = window.confirm(`정말 펀딩 내역(${formatNumber(targetItem.amount)}원)을 삭제하시겠습니까? 🥺`);
+    if (!confirmDelete) return;
+
+    const newFundingHistory = config.fundingHistory.filter(item => item.id !== idToDelete);
+    const newCurrentAmount = Math.max(config.currentAmount - targetItem.amount, 0);
+
+    const newData = {
+      ...config,
+      currentAmount: newCurrentAmount,
+      fundingHistory: newFundingHistory
+    };
+
+    // Optimistic update
+    setConfig(newData);
+
+    // Update local storage and state for myFundIds
+    const updatedFundIds = myFundIds.filter(id => id !== idToDelete);
+    setMyFundIds(updatedFundIds);
+    localStorage.setItem('birthday_myFundIds', JSON.stringify(updatedFundIds));
+
+    // Check if the goal status should change back
+    if (newData.currentAmount < newData.targetAmount && step === 'finished') {
+      setStep('action');
+    }
+
+    try {
+      await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newData)
+      });
+      alert('펀딩이 취소되었습니다. 마음은 감사히 받았습니다! 🌸');
+    } catch (e) {
+      console.error(e);
+      alert('서버에 반영하지 못했습니다. 다시 시도해주세요.');
+    }
   };
 
   const resetFlow = () => {
@@ -224,7 +296,19 @@ export default function Home() {
                   min="1000"
                   step="1000"
                   value={amount}
-                  onChange={e => setAmount(e.target.value ? Number(e.target.value) : '')}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setAmount('');
+                      return;
+                    }
+                    const numVal = Number(val);
+                    if (numVal > 30000) {
+                      setShowWarning(true);
+                      return;
+                    }
+                    setAmount(numVal);
+                  }}
                 />
               </div>
               <div className="checkbox-group">
@@ -272,13 +356,24 @@ export default function Home() {
                 <li style={{ textAlign: 'center', color: '#999', padding: '20px' }}>아직 펀딩 내역이 없어요. 첫 번째 주인공이 되어주세요!</li>
               ) : (
                 reversedHistory.map((item, index) => {
-                  const isMine = myNickname && item.nickname === myNickname;
-                  const showAmount = !item.hidden || isMine;
+                  const isMine = item.id && myFundIds.includes(item.id);
+                  const showAmount = !item.hidden || isMine || (myNickname && item.nickname === myNickname);
 
                   return (
                     <li key={index} className="history-item">
                       <div className="history-nickname">🎉 {item.nickname} {isMine && <span style={{ fontSize: '0.8rem', color: '#ff4d4f' }}>(내 후원)</span>}</div>
-                      <div className="history-amount">{showAmount ? `${formatNumber(item.amount)}원` : '비밀 금액 🤫'}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="history-amount">{showAmount ? `${formatNumber(item.amount)}원` : '비밀 금액 🤫'}</div>
+                        {isMine && (
+                          <button
+                            onClick={() => handleDeleteFunding(item.id)}
+                            className="delete-history-btn"
+                            title="펀딩 내역 삭제"
+                          >
+                            ❌
+                          </button>
+                        )}
+                      </div>
                     </li>
                   );
                 })
@@ -286,6 +381,25 @@ export default function Home() {
             </ul>
           </section>
         </>
+      )}
+
+      {/* Cute Warning Modal */}
+      {showWarning && (
+        <div className="warning-overlay" onClick={() => setShowWarning(false)}>
+          <div className="warning-card" onClick={e => e.stopPropagation()}>
+            <div className="warning-image-wrapper">
+              <img src="/assets/warning_cute.png" alt="경고" className="warning-cat-img" />
+            </div>
+            <h3 className="warning-card-title">앗! 3만원 초과는 멈춰! 🚫</h3>
+            <p className="warning-card-desc">
+              3만원을 초과하는 금액은 입력하실 수 없습니다.<br />
+              마음만 가득 받을게요! 🥰
+            </p>
+            <button className="btn primary-btn warning-close-btn" onClick={() => setShowWarning(false)}>
+              확인
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

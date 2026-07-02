@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import Redis from 'ioredis';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 const KV_CONFIG_KEY = 'birthday_config';
 
@@ -21,8 +23,14 @@ const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 export async function GET() {
   try {
     if (!redis) {
-      console.warn("Redis is not configured. Falling back to default config.");
-      return NextResponse.json(defaultConfig);
+      console.warn("Redis is not configured. Falling back to local data.json.");
+      try {
+        const filePath = path.join(process.cwd(), 'data.json');
+        const fileData = await fs.readFile(filePath, 'utf8');
+        return NextResponse.json(JSON.parse(fileData));
+      } catch (err) {
+        return NextResponse.json(defaultConfig);
+      }
     }
 
     const dataString = await redis.get(KV_CONFIG_KEY);
@@ -42,8 +50,31 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     if (!redis) {
-      console.warn("Redis is not configured. Cannot save config.");
-      return NextResponse.json({ success: false, error: 'Database is not configured. (Missing REDIS_URL)' }, { status: 500 });
+      console.warn("Redis is not configured. Saving to local data.json.");
+      try {
+        const filePath = path.join(process.cwd(), 'data.json');
+        let existingData: any = {};
+        try {
+          const fileData = await fs.readFile(filePath, 'utf8');
+          existingData = JSON.parse(fileData);
+        } catch (e) {
+          existingData = {
+            currentAmount: 0,
+            fundingHistory: []
+          };
+        }
+
+        const newData = {
+          ...existingData,
+          ...body
+        };
+
+        await fs.writeFile(filePath, JSON.stringify(newData, null, 2), 'utf8');
+        return NextResponse.json({ success: true, data: newData });
+      } catch (err) {
+        console.error("Failed to write to data.json:", err);
+        return NextResponse.json({ success: false, error: 'Failed to write to local data.json' }, { status: 500 });
+      }
     }
 
     let existingData: any = {};
@@ -75,3 +106,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Failed to save config' }, { status: 500 });
   }
 }
+
